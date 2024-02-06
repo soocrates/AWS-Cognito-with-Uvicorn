@@ -13,6 +13,18 @@ auth = JWTBearer(jwks)
 async def secure() -> bool:
     return True
 
+@app.get("/authenticated", dependencies=[Depends(auth)])
+async def login():
+    return f"""
+    <html>
+        <head>
+            <title>Login</title>
+        </head>
+        <body>
+            <a href="">Hello World </a>
+        </body>
+    </html>
+    """
 
 @app.get("/not_secure")
 async def not_secure() -> bool:
