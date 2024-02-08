@@ -27,7 +27,8 @@ async def is_authenticated(request: Request):
             # The token is valid
             return True
         else:
-            raise HTTPException(status_code=403, detail="Username Mismatch. Please Try Again")
+            return None
+            # raise HTTPException(status_code=403, detail="Username Mismatch. Please Try Again")
             
     elif "error" in verification_result:
         detail = verification_result["error"]
