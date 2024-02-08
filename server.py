@@ -1,4 +1,4 @@
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.responses import HTMLResponse
 from dotenv import load_dotenv
 from typing import Optional
@@ -28,7 +28,7 @@ def read_html():
     </html>
     """
 @app.get("/authenticated")
-def read_authenticated(code: Optional[str] = None):
+def read_authenticated(response: Response,code: Optional[str] = None):
     if not code:
         raise HTTPException(status_code=400, detail="Code query parameter is missing")
     else:
@@ -44,7 +44,7 @@ def read_authenticated(code: Optional[str] = None):
         if cognito_idp_response.status_code == 200:
             openid_config = cognito_idp_response.json()
             token_endpoint = openid_config.get("token_endpoint")
-                # Prepare and send request
+            # Prepare and send request
             data = {
                 'grant_type': 'authorization_code',
                 'client_id': client_id,
@@ -55,11 +55,11 @@ def read_authenticated(code: Optional[str] = None):
             headers = {
                 'Content-Type': 'application/x-www-form-urlencoded'
             }
-            response = requests.post(token_endpoint, data=data, headers=headers)
+            response_token = requests.post(token_endpoint, data=data, headers=headers)
             # Check response status
-            if response.status_code == 200:
-                response_data = response.json()
-                if not response_data["token_type"] == 'Bearer':
+            if response_token.status_code == 200:
+                response_data = response_token.json()
+                if response_data["token_type"] == 'Bearer':
                     # Parse the JSON response
                     response.set_cookie(key="id_token", value=response_data["id_token"], httponly=True, secure=True)
                     response.set_cookie(key="access_token", value=response_data["access_token"], httponly=True, secure=True)
@@ -72,8 +72,8 @@ def read_authenticated(code: Optional[str] = None):
             else:
                 return {
                     "message": "Failed to retrieve tokens",
-                    "Status Code": response.status_code,
-                    "Response": response.text
+                    "Status Code": response_token.status_code,
+                    "Response": response_token.text
                 }
         else:
             return {
@@ -81,6 +81,6 @@ def read_authenticated(code: Optional[str] = None):
                 "Response": cognito_idp_response.text
             }
             
-@app.get("/authenticated/{username}", Depends())
+@app.get("/authenticated/{username}")
 def get_user_name():
     return {"Hello": "World"}
