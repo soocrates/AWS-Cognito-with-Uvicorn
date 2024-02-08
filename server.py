@@ -29,9 +29,9 @@ def read_html():
     </html>
     """
 @app.get("/authenticated")
-def read_authenticated(code: Optional[str] = None):
-    if is_authenticated():
-        return RedirectResponse(url="/whoami")
+def read_authenticated(code: Optional[str] = None, user_info: Optional[dict] = Depends(is_authenticated)):
+    if user_info:
+        return RedirectResponse(url="/whoami/", status_code=303)
     if not code:
         raise HTTPException(status_code=400, detail="Code query parameter is missing")
     
@@ -75,3 +75,7 @@ async def get_user_name(request: Request, auth=Depends(is_authenticated)):
         "Hello": authenticated_user_info["username"],
         "Email": authenticated_user_info["email"]
     }
+@app.get("/protected-route")
+async def protected_route(request: Request, auth=Depends(is_authenticated)):
+    # If the code reaches here, the user is authenticated
+    return {"message": "You are accessing a protected route."}
