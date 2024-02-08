@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
 from dotenv import load_dotenv
 from typing import Optional
@@ -35,7 +35,7 @@ def read_authenticated(code: Optional[str] = None):
         client_id = os.getenv('CLIENT_ID')
         userpoolid = os.getenv('USERPOOL_ID')
         redirect_uri = os.getenv('REDIRECT_URI')
-        region = userpoolid.split('_')[0]
+        region = os.getenv('REGION')
         client_secret = ''
         
         cognito_idp_url = f"https://cognito-idp.{region}.amazonaws.com/{userpoolid}/.well-known/openid-configuration"
@@ -61,12 +61,11 @@ def read_authenticated(code: Optional[str] = None):
                 if not response_data["token_type"] == 'Bearer':
                     # Parse the JSON response
                     response_data = response.json()
-                    response.set_cookie(key="access_token", value=response_data["id_token"], httponly=True, secure=True)
-                    response.set_cookie(key="refresh_token", value=response_data["access_token"], httponly=True, secure=True)
+                    response.set_cookie(key="id_token", value=response_data["id_token"], httponly=True, secure=True)
+                    response.set_cookie(key="access_token", value=response_data["access_token"], httponly=True, secure=True)
                     response.set_cookie(key="refresh_token", value=response_data["refresh_token"], httponly=True, secure=True)
                     response.set_cookie(key="expires_in", value=response_data["expires_in"], httponly=True, secure=True)
-                    response.set_cookie(key="token_type", value=response_data["token_type"], httponly=True, secure=True)
-                    
+
                     return response_data
                 else:
                     raise HTTPException(status_code=403, detail="Wrong authentication method") 
@@ -81,6 +80,7 @@ def read_authenticated(code: Optional[str] = None):
                 "Status Code": cognito_idp_response.status_code,
                 "Response": cognito_idp_response.text
             }
-@app.get("/authenticated/user")
+            
+@app.get("/authenticated/{username}")
 def get_user_name():
     return {"Hello": "World"}
