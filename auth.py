@@ -15,7 +15,7 @@ async def is_authenticated(request: Request):
 
     # Verify the signature of the access token
     verification_result = await signature_verification(access_token)
-    userinfo_result = await retrive_user_information(access_token)
+    userinfo_result = retrive_user_information(access_token)
     if "message" in verification_result and verification_result["message"] == "Signature Verified!":
         if verification_result["username"] == userinfo_result["username"]:
             # Store the user info in the global variable
