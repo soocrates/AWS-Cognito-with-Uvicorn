@@ -33,24 +33,16 @@ def read_authenticated(code: Optional[str] = None):
         raise HTTPException(status_code=400, detail="Code query parameter is missing")
     
     client_id = os.getenv('CLIENT_ID')
-    userpoolid = os.getenv('USERPOOL_ID')
     redirect_uri = os.getenv('REDIRECT_URI')
     region = os.getenv('REGION')
-    client_secret = ''
+    domain = os.getenv('HOSTED_UI_COGNITO_DOMAIN')
     
-    cognito_idp_url = f"https://cognito-idp.{region}.amazonaws.com/{userpoolid}/.well-known/openid-configuration"
-    cognito_idp_response = requests.get(cognito_idp_url)
-
-    if cognito_idp_response.status_code != 200:
-        return JSONResponse(status_code=cognito_idp_response.status_code, content={"message": "Failed to load OpenID configuration"})
-
-    openid_config = cognito_idp_response.json()
-    token_endpoint = openid_config.get("token_endpoint")
+    token_endpoint = f"https://{domain}.auth.{region}.amazoncognito.com/oauth2/token"
     # Prepare and send request
     data = {
         'grant_type': 'authorization_code',
         'client_id': client_id,
-        'client_secret': client_secret,
+        'client_secret': '',
         'code': code,
         'redirect_uri': redirect_uri
     }

@@ -3,6 +3,7 @@
 ####################################################
 
 from jwt.algorithms import RSAAlgorithm
+from datetime import datetime
 from dotenv import load_dotenv
 import requests
 import json
@@ -42,7 +43,16 @@ async def signature_verification(access_token):
                 algorithms=[jwk['alg']],
                 issuer=expected_issuer,
               )
-              return {"message": "Signature Verified!"}
+              username = decoded_token.get('username')
+              exp = decoded_token.get('exp')
+              if exp:
+                  exp_time = datetime.utcfromtimestamp(exp).strftime('%Y-%m-%d %H:%M:%S UTC')
+
+              return {
+                  "message": "Signature Verified!",
+                  "username": username,
+                  "expiration_time": exp_time
+              }
           except jwt.ExpiredSignatureError:
               return {"error": "JWT Token has expired."}
           except jwt.exceptions.InvalidSignatureError:
