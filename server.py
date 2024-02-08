@@ -1,9 +1,10 @@
-from fastapi import FastAPI, HTTPException, Request, Response
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi import FastAPI, HTTPException, Request, Response, Depends
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from dotenv import load_dotenv
 from typing import Optional
 import requests
 import os
+from auth import is_authenticated
 
 app = FastAPI()
 # Load the environment variables from .env file
@@ -29,6 +30,8 @@ def read_html():
     """
 @app.get("/authenticated")
 def read_authenticated(code: Optional[str] = None):
+    if is_authenticated():
+        return RedirectResponse(url="/whoami")
     if not code:
         raise HTTPException(status_code=400, detail="Code query parameter is missing")
     
@@ -65,6 +68,10 @@ def read_authenticated(code: Optional[str] = None):
     else:
         return JSONResponse(status_code=response_token.status_code, content={"message": "Failed to retrieve tokens"})
       
-@app.get("/authenticated/{username}")
-def get_user_name():
-    return {"Hello": "World"}
+@app.get("/whoami/")
+async def get_user_name(request: Request, auth=Depends(is_authenticated)):
+    global authenticated_user_info
+    return {
+        "Hello": authenticated_user_info["username"],
+        "Email": authenticated_user_info["email"]
+    }
