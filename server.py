@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException, Request, Response, Depends
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from dotenv import load_dotenv
 from typing import Optional
 import requests
@@ -15,23 +15,8 @@ load_dotenv()
 def read_root():
     return {"Hello": "World"}
 
-# A route that returns HTML content
-@app.get("/html", response_class=HTMLResponse)
-def read_html():
-    return """
-    <html>
-        <head>
-            <title>Some HTML in here</title>
-        </head>
-        <body>
-            <h1>Hello, world!</h1>
-        </body>
-    </html>
-    """
 @app.get("/authenticated")
-def read_authenticated(code: Optional[str] = None, user_info: Optional[dict] = Depends(is_authenticated)):
-    if user_info:
-        return RedirectResponse(url="/whoami/", status_code=303)
+def read_authenticated(code: Optional[str] = None):
     if not code:
         raise HTTPException(status_code=400, detail="Code query parameter is missing")
     
@@ -62,7 +47,7 @@ def read_authenticated(code: Optional[str] = None, user_info: Optional[dict] = D
             response.set_cookie(key="access_token", value=response_data["access_token"], max_age= response_data["expires_in"], httponly=True, secure=True, samesite='Lax')
             response.set_cookie(key="refresh_token", value=response_data["refresh_token"], max_age= 60 * 60 * 24 * 7, httponly=True, secure=True, samesite='Lax')
             response.set_cookie(key="code", value=code, max_age= response_data["expires_in"], httponly=True, secure=True, samesite='Lax')
-            return response
+            return RedirectResponse(url="/whoami/", status_code=303)
         else:
             raise HTTPException(status_code=403, detail="Wrong authentication method")
     else:
