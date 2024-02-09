@@ -47,6 +47,7 @@ def read_authenticated(response: Response,code: Optional[str] = None):
             response.set_cookie(key="id_token", value=response_data["id_token"], max_age= response_data["expires_in"], httponly=True, secure=True, samesite='Lax')
             response.set_cookie(key="access_token", value=response_data["access_token"], max_age= response_data["expires_in"], httponly=True, secure=True, samesite='Lax')
             response.set_cookie(key="refresh_token", value=response_data["refresh_token"], max_age= 60 * 60 * 24 * 7, httponly=True, secure=True, samesite='Lax')
+            
             return response
         else:
             raise HTTPException(status_code=403, detail="Wrong authentication method")
@@ -64,3 +65,12 @@ async def get_user_name(request: Request, auth=Depends(is_authenticated)):
 async def protected_route(request: Request, auth=Depends(is_authenticated)):
     # If the code reaches here, the user is authenticated
     return {"message": "You are accessing a protected route."}
+
+@app.get("/logout")
+async def protected_route(response: Response):
+    response = RedirectResponse(url="/", status_code=303)
+    # delete cookies here
+    response.delete_cookie("id_token")
+    response.delete_cookie("access_token")
+    response.delete_cookie("refresh_token")
+    return response
