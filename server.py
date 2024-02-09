@@ -16,7 +16,7 @@ def read_root():
     return {"Hello": "World"}
 
 @app.get("/authenticated")
-def read_authenticated(code: Optional[str] = None):
+def read_authenticated(response: Response,code: Optional[str] = None):
     if not code:
         raise HTTPException(status_code=400, detail="Code query parameter is missing")
     
@@ -40,13 +40,14 @@ def read_authenticated(code: Optional[str] = None):
     if response_token.status_code == 200:
         response_data = response_token.json()
         if response_data["token_type"] == 'Bearer':
-            content = {"response": response_data}
-            response = JSONResponse(content=content)
+            # content = {"response": "Hello-World"}
+            # response = JSONResponse(content=content)
+            response = RedirectResponse(url="/whoami/", status_code=303)
             # Set cookies here
             response.set_cookie(key="id_token", value=response_data["id_token"], max_age= response_data["expires_in"], httponly=True, secure=True, samesite='Lax')
             response.set_cookie(key="access_token", value=response_data["access_token"], max_age= response_data["expires_in"], httponly=True, secure=True, samesite='Lax')
             response.set_cookie(key="refresh_token", value=response_data["refresh_token"], max_age= 60 * 60 * 24 * 7, httponly=True, secure=True, samesite='Lax')
-            return RedirectResponse(url="/whoami/", status_code=303)
+            return response
         else:
             raise HTTPException(status_code=403, detail="Wrong authentication method")
     else:
