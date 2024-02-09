@@ -3,12 +3,9 @@ from signature import signature_verification
 from userinfo import retrive_user_information
 
 
-authenticated_user_info = {}
+
 async def is_authenticated(request: Request):
     # Extract the access_token from the cookie in the request
-    
-    global authenticated_user_info  # Declare the global variable
-    
     access_token = request.cookies.get("access_token")
     if not access_token:
         raise HTTPException(status_code=401, detail="Token is missing. Login Again")
@@ -25,9 +22,9 @@ async def is_authenticated(request: Request):
                 "expiration_time": verification_result["expiration_time"]
             }
             # The token is valid
-            return True
+            return (True, authenticated_user_info)
         else:
-            return None
+            return (False, None)
             # raise HTTPException(status_code=403, detail="Username Mismatch. Please Try Again")
             
     elif "error" in verification_result:
