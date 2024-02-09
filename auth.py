@@ -4,7 +4,7 @@ from userinfo import retrive_user_information
 
 
 
-async def is_authenticated(request: Request):
+async def is_authenticated(request: Request)->tuple[bool, dict]:
     # Extract the access_token from the cookie in the request
     access_token = request.cookies.get("access_token")
     if not access_token:
