@@ -25,7 +25,7 @@ To use this project, you'll need:
     Start by cloning this repository to your local machine:
 
     ```bash
-    git clone https://your-repository-url.git
+    git clone https://github.com/soocrates/AWS-Cognito-with-Uvicorn.git
     cd your-project-directory
     ```
 
