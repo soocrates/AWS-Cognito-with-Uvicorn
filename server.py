@@ -22,9 +22,9 @@ def read_authenticated(response: Response,code: Optional[str] = None):
     
     client_id = os.getenv('CLIENT_ID')
     redirect_uri = os.getenv('REDIRECT_URI')
-    region = os.getenv('REGION')
+    region = os.getenv('REGION', 'us-east-1')
     domain = os.getenv('HOSTED_UI_COGNITO_DOMAIN')
-    
+    print(f"{client_id}, {redirect_uri}, {domain}")
     token_endpoint = f"https://{domain}.auth.{region}.amazoncognito.com/oauth2/token"
     # Prepare and send request
     data = {
@@ -40,15 +40,15 @@ def read_authenticated(response: Response,code: Optional[str] = None):
     if response_token.status_code == 200:
         response_data = response_token.json()
         if response_data["token_type"] == 'Bearer':
-            # content = {"response": "Hello-World"}
-            # response = JSONResponse(content=content)
+            # print(0)
             response = RedirectResponse(url="/whoami/", status_code=303)
             # Set cookies here
             response.set_cookie(key="id_token", value=response_data["id_token"], max_age= response_data["expires_in"], httponly=True, secure=True, samesite='Lax')
             response.set_cookie(key="access_token", value=response_data["access_token"], max_age= response_data["expires_in"], httponly=True, secure=True, samesite='Lax')
             response.set_cookie(key="refresh_token", value=response_data["refresh_token"], max_age= 60 * 60 * 24 * 7, httponly=True, secure=True, samesite='Lax')
-            
+            # print(1)
             return response
+            # return JSONResponse(status_code=response_token.status_code,content= {"message":"YESSSS world"})
         else:
             raise HTTPException(status_code=403, detail="Wrong authentication method")
     else:
